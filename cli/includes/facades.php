@@ -89,6 +89,9 @@ class DevTools extends Facade
 class Site extends Facade
 {
 }
+class SystemInformation extends Facade
+{
+}
 class Logs extends Facade
 {
 }
