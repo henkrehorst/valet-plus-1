@@ -23,6 +23,9 @@ class SystemInformation
 
     /**
      * Checks system is running on Apple ARM processor.
+     *
+     * @return bool
+     *    True if system is runnig ARM, false if system is running Intel.
      */
     public function isRunningArm()
     {
@@ -32,6 +35,9 @@ class SystemInformation
 
     /**
      * Checks system is running on a Intel processor.
+     *
+     * @return bool
+     *    True if system is runnig Intel, false if system is running ARM.
      */
     public function isRunningIntel()
     {
