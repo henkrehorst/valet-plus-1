@@ -11,27 +11,31 @@ class Mailhog extends AbstractService
     public $cli;
     public $files;
     public $site;
+    public $sysInfo;
 
     /**
      * Create a new instance.
      *
-     * @param  Brew          $brew
-     * @param  CommandLine   $cli
-     * @param  Filesystem    $files
-     * @param  Configuration $configuration
-     * @param  Site          $site
+     * @param  Brew              $brew
+     * @param  CommandLine       $cli
+     * @param  Filesystem        $files
+     * @param  Configuration     $configuration
+     * @param  Site              $site
+     * @param  SystemInformation $sysInfo
      */
     public function __construct(
         Brew $brew,
         CommandLine $cli,
         Filesystem $files,
         Configuration $configuration,
-        Site $site
+        Site $site,
+        SystemInformation $sysInfo
     ) {
         $this->cli   = $cli;
         $this->brew  = $brew;
         $this->site  = $site;
         $this->files = $files;
+        $this->sysInfo = $sysInfo;
         parent::__construct($configuration);
     }
 
@@ -42,6 +46,11 @@ class Mailhog extends AbstractService
      */
     public function install()
     {
+        if($this->sysInfo->isRunningArm()){
+            info('[mailhog] Skip installation, mailhog is not yet supported on APPLE M1');
+            return;
+        }
+
         if ($this->installed()) {
             info('[mailhog] already installed');
         } else {
