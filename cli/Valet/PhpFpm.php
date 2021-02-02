@@ -40,7 +40,8 @@ class PhpFpm
     public $peclCustom;
 
     const DEPRECATED_PHP_TAP = 'homebrew/php';
-    const VALET_PHP_BREW_TAP = 'henkrehorst/php';
+    //TODO: REVERT ON RELEASE BREW TAP UPDATE
+    const VALET_PHP_BREW_TAP = 'henkrehorst/php-test';
 
     /**
      * Create a new PHP FPM class instance.
