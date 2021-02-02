@@ -7,8 +7,12 @@ use DomainException;
 class Brew
 {
 
+    const ARM_INSTALLATION_PREFIX = '/opt/homebrew';
+    const INTEL_INSTALLATION_PREFIX = '/usr/local';
+
     public $cli;
     public $files;
+    public $sysInfo;
 
     /**
      * Create a new Brew instance.
@@ -16,10 +20,11 @@ class Brew
      * @param  CommandLine $cli
      * @param  Filesystem $files
      */
-    public function __construct(CommandLine $cli, Filesystem $files)
+    public function __construct(CommandLine $cli, Filesystem $files, SystemInformation $sysInfo)
     {
         $this->cli = $cli;
         $this->files = $files;
+        $this->sysInfo = $sysInfo;
     }
 
     /**
@@ -225,5 +230,15 @@ class Brew
         $info = explode(" ", trim(str_replace($formula, "", $this->cli->runAsUser('brew services list | grep ' . $formula))));
         $state = array_shift($info);
         return ($state === 'started');
+    }
+
+    /**
+     * Get prefix for Homebrew installation path.
+     *
+     * @return string
+     */
+    public function getBrewPrefix()
+    {
+        return $this->sysInfo->isRunningArm() ? SELF::ARM_INSTALLATION_PREFIX : SELF::INTEL_INSTALLATION_PREFIX;
     }
 }
