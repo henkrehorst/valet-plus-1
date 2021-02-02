@@ -29,7 +29,7 @@ class SystemInformation
      */
     public function isRunningArm()
     {
-        return $this->cli->quietly('uname -p') === SELF::ARM_IDENTIFIER;
+        return strpos($this->cli->run('uname -p'), self::ARM_IDENTIFIER) !== false;
     }
 
 
@@ -41,6 +41,6 @@ class SystemInformation
      */
     public function isRunningIntel()
     {
-        return $this->cli->quietly('uname -p') === SELF::INTEL_IDENTIFIER;
+        return strpos($this->cli->run('uname -p'), self::INTEL_IDENTIFIER) !== false;
     }
 }
