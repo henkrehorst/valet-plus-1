@@ -7,11 +7,11 @@ use DomainException;
 class Elasticsearch
 {
     const NGINX_CONFIGURATION_STUB = __DIR__ . '/../stubs/elasticsearch.conf';
-    const NGINX_CONFIGURATION_PATH = '/usr/local/etc/nginx/valet/elasticsearch.conf';
+    const NGINX_CONFIGURATION_PATH = '/etc/nginx/valet/elasticsearch.conf';
 
-    const ES_CONFIG_YAML          = '/usr/local/etc/elasticsearch/elasticsearch.yml';
+    const ES_CONFIG_YAML          = '/etc/elasticsearch/elasticsearch.yml';
     const ES_CONFIG_DATA_PATH     = 'path.data';
-    const ES_CONFIG_DATA_BASEPATH = '/usr/local/var/';
+    const ES_CONFIG_DATA_BASEPATH = '/var/';
 
     const ES_FORMULA_NAME    = 'elasticsearch';
     const ES_V68_VERSION     = '6.8';
@@ -154,7 +154,7 @@ class Elasticsearch
     public function updateDomain($domain)
     {
         $this->files->putAsUser(
-            self::NGINX_CONFIGURATION_PATH,
+            $this->brew->getBrewPrefix() . self::NGINX_CONFIGURATION_PATH,
             str_replace(
                 ['VALET_DOMAIN'],
                 [$domain],
@@ -195,9 +195,9 @@ class Elasticsearch
 
         // Alter elasticsearch data path in config yaml.
         if (extension_loaded('yaml')) {
-            $config                            = yaml_parse_file(self::ES_CONFIG_YAML);
-            $config[self::ES_CONFIG_DATA_PATH] = self::ES_CONFIG_DATA_BASEPATH . self::ES_FORMULA_NAME . '@' . $version . '/';
-            yaml_emit_file(self::ES_CONFIG_YAML, $config);
+            $config                            = yaml_parse_file($this->brew->getBrewPrefix() . self::ES_CONFIG_YAML);
+            $config[self::ES_CONFIG_DATA_PATH] = $this->brew->getBrewPrefix() . self::ES_CONFIG_DATA_BASEPATH . self::ES_FORMULA_NAME . '@' . $version . '/';
+            yaml_emit_file($this->brew->getBrewPrefix() . self::ES_CONFIG_YAML, $config);
         } else {
             // Install PHP dependencies through installation of PHP.
             $this->phpFpm->install();

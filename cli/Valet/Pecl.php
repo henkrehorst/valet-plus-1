@@ -80,14 +80,16 @@ class Pecl extends AbstractPecl
     ];
 
     public $peclCustom;
+    public $brew;
 
     /**
      * @inheritdoc
      */
-    public function __construct(CommandLine $cli, Filesystem $files, PeclCustom $peclCustom)
+    public function __construct(CommandLine $cli, Filesystem $files, PeclCustom $peclCustom, Brew $brew)
     {
         parent::__construct($cli, $files);
         $this->peclCustom = $peclCustom;
+        $this->brew = $brew;
     }
 
     /**
@@ -324,7 +326,7 @@ class Pecl extends AbstractPecl
         foreach (PhpFpm::SUPPORTED_PHP_FORMULAE as $phpVersion => $brewname) {
             output("Checking php $phpVersion...");
 
-            $pearConfigPath = PhpFpm::LOCAL_PHP_FOLDER . "$phpVersion/pear.conf";
+            $pearConfigPath = $this->brew->getBrewPrefix() . PhpFpm::LOCAL_PHP_FOLDER . "$phpVersion/pear.conf";
 
             if (!$this->files->exists($pearConfigPath)) {
                 warning("    Skipping $phpVersion, Pear config path could not be found at: $pearConfigPath");
@@ -354,16 +356,16 @@ class Pecl extends AbstractPecl
             $pearName = $this->replacePhpWithPear($brewname);
 
             $phpIniPath = str_replace('pear.conf', 'php.ini', $pearConfigPath);
-            $phpDirPath = "/usr/local/share/$pearName";
-            $pearDocDirPath = "/usr/local/share/$pearName/doc";
-            $phpExtensionDirPath = '/usr/local/lib/php/pecl/'.basename($pearConfig['ext_dir']);
-            $phpBinPath = "/usr/local/opt/$brewname/bin";
-            $pearDataDirPath = "/usr/local/share/$pearName/data";
-            $pearCfgDirPath = "/usr/local/share/$pearName/cfg";
-            $pearWwwDirPath = "/usr/local/share/$pearName/htdocs";
-            $pearManDirPath = '/usr/local/share/man';
-            $pearTestDirPath = "/usr/local/share/$pearName/test";
-            $phpBinDirPath = "/usr/local/opt/$brewname/bin/php";
+            $phpDirPath = $this->brew->getBrewPrefix()."/share/$pearName";
+            $pearDocDirPath = $this->brew->getBrewPrefix()."/share/$pearName/doc";
+            $phpExtensionDirPath = $this->brew->getBrewPrefix().'/lib/php/pecl/'.basename($pearConfig['ext_dir']);
+            $phpBinPath = $this->brew->getBrewPrefix()."/opt/$brewname/bin";
+            $pearDataDirPath = $this->brew->getBrewPrefix()."/share/$pearName/data";
+            $pearCfgDirPath = $this->brew->getBrewPrefix()."/share/$pearName/cfg";
+            $pearWwwDirPath = $this->brew->getBrewPrefix()."/share/$pearName/htdocs";
+            $pearManDirPath = $this->brew->getBrewPrefix().'/share/man';
+            $pearTestDirPath = $this->brew->getBrewPrefix()."/share/$pearName/test";
+            $phpBinDirPath = $this->brew->getBrewPrefix()."/opt/$brewname/bin/php";
 
             // Check php_ini value of par config.
             if (empty($pearConfig['php_ini']) || $pearConfig['php_ini'] !== $phpIniPath) {

@@ -9,7 +9,8 @@ class DnsMasq
     public $files;
 
     public $resolverPath = '/etc/resolver';
-    public $configPath = '/usr/local/etc/dnsmasq.conf';
+    public $configPath = '/etc/dnsmasq.conf';
+    // TODO find config location
     public $exampleConfigPath = '/usr/local/opt/dnsmasq/dnsmasq.conf.example';
 
     /**
@@ -69,10 +70,10 @@ class DnsMasq
      */
     public function copyExampleConfig()
     {
-        if (! $this->files->exists($this->configPath)) {
+        if (! $this->files->exists($this->brew->getBrewPrefix() . $this->configPath)) {
             $this->files->copyAsUser(
                 $this->exampleConfigPath,
-                $this->configPath
+                $this->brew->getBrewPrefix() . $this->configPath
             );
         }
     }
@@ -87,7 +88,7 @@ class DnsMasq
     {
         if (! $this->customConfigIsBeingImported($customConfigPath)) {
             $this->files->appendAsUser(
-                $this->configPath,
+                $this->brew->getBrewPrefix() . $this->configPath,
                 PHP_EOL.'conf-file='.$customConfigPath.PHP_EOL
             );
         }
@@ -101,7 +102,7 @@ class DnsMasq
      */
     public function customConfigIsBeingImported($customConfigPath)
     {
-        return strpos($this->files->get($this->configPath), $customConfigPath) !== false;
+        return strpos($this->files->get($this->brew->getBrewPrefix() . $this->configPath), $customConfigPath) !== false;
     }
 
     /**
