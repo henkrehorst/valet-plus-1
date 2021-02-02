@@ -46,7 +46,8 @@ class Pecl extends AbstractPecl
             '7.0' => '2.9.0',
             '5.6' => '2.2.7',
             'default' => false,
-            'extension_type' => self::ZEND_EXTENSION_TYPE
+            'extension_type' => self::ZEND_EXTENSION_TYPE,
+            'arm_ready' => true
         ],
         self::APCU_EXTENSION => [
             '7.3' => '5.1.17',
@@ -54,7 +55,8 @@ class Pecl extends AbstractPecl
             '7.1' => '5.1.17',
             '7.0' => '5.1.17',
             '5.6' => '4.0.11',
-            'extension_type' => self::NORMAL_EXTENSION_TYPE
+            'extension_type' => self::NORMAL_EXTENSION_TYPE,
+            'arm_ready' => true
         ],
         self::GEOIP_EXTENSION => [
             '7.4' => '1.1.1',
@@ -75,21 +77,24 @@ class Pecl extends AbstractPecl
         self::YAML_EXTENSION => [
             '5.6' => '1.3.1',
             '7.0' => '2.0.4',
-            'extension_type' => self::NORMAL_EXTENSION_TYPE
+            'extension_type' => self::NORMAL_EXTENSION_TYPE,
+            'arm_ready' => true
         ]
     ];
 
     public $peclCustom;
     public $brew;
+    public $sysInfo;
 
     /**
      * @inheritdoc
      */
-    public function __construct(CommandLine $cli, Filesystem $files, PeclCustom $peclCustom, Brew $brew)
+    public function __construct(CommandLine $cli, Filesystem $files, PeclCustom $peclCustom, Brew $brew, SystemInformation $sysInfo)
     {
         parent::__construct($cli, $files);
         $this->peclCustom = $peclCustom;
         $this->brew = $brew;
+        $this->sysInfo = $sysInfo;
     }
 
     /**
@@ -100,6 +105,10 @@ class Pecl extends AbstractPecl
         info("[PECL] Installing extensions");
         foreach (self::EXTENSIONS as $extension => $versions) {
             if ($onlyDefaults && $this->isDefaultExtension($extension) === false) {
+                continue;
+            }
+
+            if ($this->sysInfo->isRunningArm() && $this->isArmReadyExtension($extension) === false){
                 continue;
             }
 
@@ -120,6 +129,8 @@ class Pecl extends AbstractPecl
      */
     public function installExtension($extension)
     {
+        if($this->sysInfo->isRunningArm()) $this->useArmInstallationWorkarounds($extension);
+
         if ($this->isInstalled($extension)) {
             output("\t$extension is already installed, skipping...");
             return false;
@@ -500,6 +511,22 @@ class Pecl extends AbstractPecl
     }
 
     /**
+     * Check the extension is compatible with Apple ARM CPU's
+     *
+     * @return bool
+     */
+    private function isArmReadyExtension($extension)
+    {
+        if (array_key_exists('arm_ready', self::EXTENSIONS[$extension])) {
+            return true;
+        } elseif (array_key_exists('arm_ready', self::EXTENSIONS[$extension]) === false) {
+            return false;
+        } else {
+            return false;
+        }
+    }
+
+    /**
      * @inheritdoc
      */
     protected function getExtensionAlias($extension)
@@ -564,5 +591,40 @@ class Pecl extends AbstractPecl
     private function replacePhpWithPear($brewname)
     {
         return str_replace('php', 'pear', $brewname);
+    }
+
+    /**
+     * Function with workarounds for pecl installation on Apple ARM CPU
+     *
+     * @param $extension
+     *     The extension key name.
+     */
+    private function useArmInstallationWorkarounds($extension)
+    {
+        if($extension === self::APCU_EXTENSION && $this->isInstalled($extension) === false) {
+            output('Applying Apple M1 workaround for APCU installation.');
+
+            // Fix php_pcre.h header file issue, for the installation of apcu
+            $this->cli
+                ->runAsUser(
+                    'ln -sf /opt/homebrew/include/pcre2.h /opt/homebrew/Cellar/valet-php@' .
+                    $this->getPhpVersion() .
+                    '/*/include/php/ext/pcre'
+                );
+        }
+
+        if($extension === self::YAML_EXTENSION && $this->isInstalled($extension) === false) {
+            output('Applying Apple M1 workaround for YAML installation.');
+
+            $yamlVersion = $this->getVersion($extension) === null ? $extension
+                : $extension . '-' . $this->getVersion($extension);
+
+            // Install yaml extension with correct libyaml installation prefix
+            $this->cli
+                ->runAsUser(
+                    'printf \'/opt/homebrew/opt/libyaml\' | pecl install ' . $yamlVersion
+                );
+            $this->enableExtension($extension);
+        }
     }
 }
