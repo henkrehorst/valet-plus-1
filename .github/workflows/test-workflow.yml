@@ -77,6 +77,18 @@ jobs:
         run: |
           ./valet install
 
+      - name: 'Open ports'
+        run: |
+          sudo lsof -PiTCP -sTCP:LISTEN
+
+      - name: 'brew services list'
+        run: |
+          sudo brew services list
+
+      - name: 'curl nginx'
+        run: |
+          curl 127.0.0.1
+
       # Nginx test cases
 
       # Check if nginx was able to start correctly.
