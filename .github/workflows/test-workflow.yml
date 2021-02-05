@@ -11,7 +11,10 @@ on:
 jobs:
   test:
     # Build on Catalina and later Big Sur (Not public released yet: https://github.com/actions/virtual-environments/issues/2486)
-    runs-on: [macos-10.15]
+    strategy:
+      matrix:
+          os: [macos-10.15]
+    runs-on: ${{matrix.os}}
 
     # A workflow run is made up of one or more jobs that can run sequentially or in parallel# All actions starting with [INSTALL] are installation instructions that can be found
     # in the Valet+ installation wiki page: https://github.com/weprovide/valet-plus/wiki/Installation
@@ -73,6 +76,30 @@ jobs:
       - name: '[INSTALL] Valet install'
         run: |
           ./valet install
+
+      - name: 'Open ports'
+        run: |
+          sudo lsof -PiTCP -sTCP:LISTEN
+
+      - name: 'brew services list'
+        run: |
+          sudo brew services list
+
+      - name: 'stop/start nginx'
+        run: |
+          sudo brew services stop nginx
+          sudo brew services start nginx
+
+      # Nginx test cases
+
+      # Check if nginx was able to start correctly.
+      - name: '[NGINX] Sudo nginx -t'
+        run: |
+          sudo nginx -t
+      # Check if the Valet+ localhost page is reachable.
+      - name: '[NGINX] Check local host'
+        run: |
+          curl 127.0.0.1 | grep "Valet - Not Found"
 
       # PHP 5.6 Command test cases
       - name: '[PHP 5.6] Switch to'
