@@ -85,9 +85,10 @@ jobs:
         run: |
           sudo brew services list
 
-      - name: 'curl nginx'
+      - name: 'stop/start nginx'
         run: |
-          curl 127.0.0.1
+          sudo brew services stop nginx
+          sudo brew services start nginx
 
       # Nginx test cases
 
